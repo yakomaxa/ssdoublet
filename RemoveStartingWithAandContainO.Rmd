@@ -1,0 +1,66 @@
+---
+title: "Remove_data_starting_with_A"
+author: "Koya"
+date: "9/24/2020"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r analysis2,echo=F,eval=T}
+aa=read.table("myssdoublet_ecod40_HH.txt",header=T)
+aa$loop_length=aa$loop_end-aa$loop_start+1
+aa$ss1_length=aa$ss1_end-aa$ss1_start+1
+aa$ss2_length=aa$ss2_end-aa$ss2_start+1
+dihds=c()
+for (i in seq(1,length(aa$abego))){
+  if(aa$HHdihedral[i]<=0){
+    dihds=c(dihds,-180-aa$HHdihedral[i])
+  }else{
+    dihds=c(dihds,180-aa$HHdihedral[i])
+  }
+}
+aa$HHdihedral_phased=dihds
+
+ls2_new=c()
+abego_new=c()
+flag_rename=c()
+for (i in seq(1,length(aa$abego))){
+  abego_split=strsplit(as.character(aa[i,]$abego),split =NULL)[[1]]
+  
+  if (all(abego_split=="A")){
+    abego_new=c(abego_new,"ALL_A")
+    ls2_new=c(ls2_new,-1)
+    flag_rename=c(flag_rename,-1)
+  }else if (any(abego_split=="O")){
+    abego_new=c(abego_new,"HAVE_O")
+    ls2_new=c(ls2_new,-2)
+    flag_rename=c(flag_rename,-2)
+  }else{
+    flag=0
+    while (abego_split[1] == "A"){
+      abego_split=abego_split[-1]
+      flag=flag+1
+    }
+    abego_split=rev(abego_split)
+    while (abego_split[1] == "A"){
+      abego_split=abego_split[-1]
+      flag=flag+1
+    }
+    abego_split=rev(abego_split)
+    abego_new=c(abego_new,paste(abego_split,collapse = ""))
+    ls2_new=c(ls2_new,length(abego_split))
+    flag_rename=c(flag_rename,flag)
+  }
+  print(abego_split)
+}
+
+aa$ls2_new=ls2_new
+aa$abego_new=abego_new
+aa$flag_rename=flag_rename
+
+write.table(file="myssdoublet_ecod40_HH_modified.txt",aa,quote = F,row.names = F)
+
+```
